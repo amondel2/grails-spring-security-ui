@@ -50,6 +50,55 @@ class UserSpec extends AbstractSecuritySpec {
 		assertContentContains 'foostra'
 	}
 
+	void testUserProfileQuestionTab() {
+		when: "find Admin user"
+		to UserSearchPage
+		username = 'admin'
+		submit()
+
+		then:
+		at UserSearchPage
+		assertContentContains 'admin'
+
+		when: "Edit user"
+		$("a", text: "admin").click()
+
+		then:
+		 at UserEditPage
+
+		when:
+			profileTab.select()
+
+		then:
+			assert  $("#myQuestion1").value() ==  "Count to four"
+
+		given:
+			def a1 =  $("#myAnswer1").value()
+			def a2 =  $("#myAnswer2").value()
+
+		when:
+		$("#myQuestion1").value("Count to 1234")
+		$("#myQuestion2").value("Count to six")
+		$("#myAnswer2").value("123456")
+		submit()
+
+		then:
+			at UserEditPage
+			assertHtmlContains("updated")
+
+		when:
+		profileTab.select()
+
+		then:
+		assert  $("#myQuestion1").value() ==  "Count to 1234"
+		assert  $("#myQuestion2").value() ==  "Count to six"
+		assert  $("#myAnswer2").value() !=  a2
+		assert  $("#myAnswer2").value() !=  "123456"
+		assert  $("#myAnswer1").value() ==   a1
+
+
+	}
+
 	void testFindByDisabled() {
 		when:
 		to UserSearchPage

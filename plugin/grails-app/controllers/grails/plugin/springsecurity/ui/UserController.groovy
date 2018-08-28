@@ -14,6 +14,7 @@
  */
 package grails.plugin.springsecurity.ui
 
+import grails.plugin.springsecurity.SpringSecurityUtils
 import grails.plugin.springsecurity.ui.strategy.UserStrategy
 import groovy.transform.CompileStatic
 
@@ -92,7 +93,19 @@ class UserController extends AbstractS2UiDomainController {
 		Set userRoleNames = user[authoritiesPropertyName].collect { it[authorityNameField] }
 		Map roleMap = buildRoleMap(userRoleNames, sortedRoles())
 
-		[roleMap: roleMap, tabData: tabData, user: user]
+		[tabErrors:buildTabErrorMap(user.hasProperty('tabErrors')?user.tabErrors:null) ,roleMap: roleMap, tabData: tabData, user: user, secQuestions:getSecQuections(user)]
+	}
+
+	protected buildTabErrorMap(tabError) {
+		def rtn = [:]
+		tabError.collect {key, val ->
+			rtn[key] = [:]
+			val?.each{ k, v ->
+				rtn[key][k] = message(code: v.code,args: v.arg,default:v.dm)
+			}
+		}
+		rtn
+
 	}
 
 	@CompileStatic
@@ -117,10 +130,19 @@ class UserController extends AbstractS2UiDomainController {
 		Role.list().sort { it[authorityNameField] }
 	}
 
-	protected getTabData() {[
-		[name: 'userinfo', icon: 'icon_user', message: message(code: 'spring.security.ui.user.info')],
-		[name: 'roles',    icon: 'icon_role', message: message(code: 'spring.security.ui.user.roles')]
-	]}
+	protected getTabData() {
+		def rtn = [
+			[name: 'userinfo', icon: 'icon_user', message: message(code: 'spring.security.ui.user.info')],
+			[name: 'roles', icon: 'icon_role', message: message(code: 'spring.security.ui.user.roles')]]
+		if (SpringSecurityUtils.securityConfig.ui.forgotPassword?.forgotPasswordExtraValidation?.size() > 0) {
+			return	rtn + [name: 'secQuestions', icon: 'icon_role', message: message(code: 'spring.security.ui.menu.' + SpringSecurityUtils.securityConfig.ui.forgotPassword.forgotPasswordExtraValidationDomainClassName.substring(SpringSecurityUtils.securityConfig.ui.forgotPassword.forgotPasswordExtraValidationDomainClassName.lastIndexOf('.') + 1))]
+		}
+		rtn
+	}
+
+	protected getSecQuections(user) {
+		uiUserStrategy.getSecurityQuestionsForUser(user, params)
+	}
 
 	protected Class<?> getClazz() { User }
 	protected String getClassLabelCode() { 'user.label' }
@@ -130,7 +152,7 @@ class UserController extends AbstractS2UiDomainController {
 			buildUserModel user
 		}
 		else {
-			[user: user, authorityList: sortedRoles(), tabData: tabData]
+			[tabErrors:buildTabErrorMap(user.hasProperty('tabErrors')?user.tabErrors:null), user: user, authorityList: sortedRoles(), tabData: tabData,secQuestions: ( action == 'create' || action == 'save') ?  getSecQuections(null)  : getSecQuections(user)]
 		}
 	}
 

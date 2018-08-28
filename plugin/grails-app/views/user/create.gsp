@@ -28,6 +28,17 @@
 			</div>
 		</g:each>
 		</s2ui:tab>
+		<g:if test="${secQuestions?.size() > 0 }">
+			<s2ui:tab name="secQuestions" height='275'>
+				<table>
+					<tbody>
+					<g:each var='entry' in='${secQuestions}'>
+						<s2ui:textFieldRow name='${entry.key}' labelCodeDefault='${entry.key}' useBean="false" value="${entry.value}"/>
+					</g:each>
+					</tbody>
+				</table>
+			</s2ui:tab>
+		</g:if>
 	</s2ui:tabs>
 	<div style='float:left; margin-top: 10px;'>
 		<s2ui:submitButton/>

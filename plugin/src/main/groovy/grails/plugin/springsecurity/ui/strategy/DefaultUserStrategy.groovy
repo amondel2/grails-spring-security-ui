@@ -36,4 +36,8 @@ class DefaultUserStrategy implements UserStrategy {
 	void deleteUser(user) {
 		springSecurityUiService.deleteUser user
 	}
+
+	def getSecurityQuestionsForUser(user,Map params) {
+		springSecurityUiService.getSecurityQuestionsForUser user, params
+	}
 }

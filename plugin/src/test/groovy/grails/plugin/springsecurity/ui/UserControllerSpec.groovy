@@ -1,15 +1,17 @@
 package grails.plugin.springsecurity.ui
 
+import grails.plugin.springsecurity.SpringSecurityUtils
 import grails.testing.web.controllers.ControllerUnitTest
 import spock.lang.Specification
 import spock.lang.Unroll
 
-@Unroll
+
 class UserControllerSpec extends Specification implements ControllerUnitTest<UserController> {
     static final Map ADMIN_ROLE = [authority: "ROLE_ADMIN"]
     static final Map SUPER_ADMIN_ROLE = [authority: "ROLE_SUPER_ADMIN"]
     static final Map USER_ROLE = [authority: "ROLE_USER"]
 
+    @Unroll
     void "verify proper construction of roleMap for user with roles #rolesAssignedToUser"() {
         given: "the authority name field has been set to the default name of 'authority'"
         controller.authorityNameField = "authority"
@@ -30,4 +32,26 @@ class UserControllerSpec extends Specification implements ControllerUnitTest<Use
         [] as Set                                          | [:]
         null                                               | [:]
     }
+
+    void "verify proper construction of the the Tab Map when config does not have Security Questions"() {
+        when:
+            def results = controller.getTabData()
+
+        then:
+            results.size() == 2
+
+    }
+
+    void "verify proper construction of the the Tab Map when config does have Security Questions"() {
+        given:
+            SpringSecurityUtils.securityConfig.ui.forgotPassword.forgotPasswordExtraValidation = ['test','value']
+            SpringSecurityUtils.securityConfig.ui.forgotPassword.forgotPasswordExtraValidationDomainClassName = 'test.Sec'
+        when:
+            def results = controller.getTabData()
+
+        then:
+            results.size() == 3
+    }
+
+
 }

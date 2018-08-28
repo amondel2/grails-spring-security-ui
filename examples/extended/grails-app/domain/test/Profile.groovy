@@ -27,7 +27,7 @@ class Profile implements Serializable {
              myQuestion2 nullable: true, blank: false
              myAnswer2 nullable: false, blank: false
          
-            user nullable: false, blank: false, unique: true
+             user nullable: false, blank: false, unique: true
         }
 
     static belongsTo = [ user: User]

@@ -217,6 +217,40 @@ class SpringSecurityUiService implements AclStrategy, ErrorsStrategy, Persistent
 	}
 
 	@Transactional
+	def getSecurityQuestionsForUser(user,Map params) {
+		if( ! SpringSecurityUtils.securityConfig.ui.forgotPassword?.forgotPasswordExtraValidation || SpringSecurityUtils.securityConfig.ui.forgotPassword?.forgotPasswordExtraValidation?.size() == 0) {
+			return []
+		}
+		def rtn = []
+
+		if(user && user.username && !user.username.equals(null) ) {
+			rtn = SecQuestions.findWhere((classMappings[UserRole].user): user)?.properties.collect{
+				if ( it.key.indexOf(classMappings[UserRole].user) == 0 ) {
+					return null
+				} else {
+					def tmp = it
+					if(params.containsKey(it.key))
+						tmp.value = params.get(it.key)
+					tmp
+				}
+			}
+		}
+		if(!rtn || rtn.size() == 0) {
+			def instance =  SecQuestions.getConstructor().newInstance()
+			rtn = instance?.properties.collect{
+				if ( it.key.indexOf(classMappings[UserRole].user) == 0 ) {
+					return null
+				} else {
+					def tmp = it
+					tmp.value = params.get(it.key)
+					tmp
+				}
+			}
+		}
+		rtn - [null]
+	}
+
+	@Transactional
 	def verifyRegistration(String token) {
 		def conf = SpringSecurityUtils.securityConfig
 		RegistrationCode registrationCode = token ? RegistrationCode.findByToken(token) : null
@@ -355,16 +389,37 @@ class SpringSecurityUiService implements AclStrategy, ErrorsStrategy, Persistent
 	def saveUser(Map properties, List<String> roleNames, String password) {
 
 		def user = uiPropertiesStrategy.setProperties(properties, User, transactionStatus)
-
+		def secDomain
 		if (password) {
 			updatePassword user, password, transactionStatus
 		}
 
 		save [:], user, 'saveUser', transactionStatus
+
+
 		if (!user.hasErrors()) {
 			addRoles user, roleNames
-		}
 
+			try {
+				secDomain = SecQuestions.getConstructor().newInstance()
+			} catch (Exception e) {
+				secDomain = null
+			}
+			if(secDomain && secDomain instanceof Object) {
+				secDomain[(classMappings[UserRole].user)] = user
+				secDomain.properties = properties
+				save [:], secDomain, 'saveUser', transactionStatus
+
+				if(secDomain.hasErrors()) {
+					def eMap = [secQuestions:[:]]
+					secDomain.errors.allErrors.each {org.springframework.validation.ObjectError err->
+						eMap.secQuestions[(err.properties['field'])] =  [code: err.getCode(), arg: err.getArguments(), dm : err.getDefaultMessage()]
+					}
+					user.metaClass['tabErrors'] = eMap
+				}
+
+			}
+		}
 		user
 	}
 
@@ -376,7 +431,6 @@ class SpringSecurityUiService implements AclStrategy, ErrorsStrategy, Persistent
 		if (properties.password && properties.password != oldPassword) {
 			updatePassword user, properties.password, transactionStatus
 		}
-
 		save [:], user, 'updateUser', transactionStatus
 		if (user.hasErrors()) {
 			return
@@ -384,12 +438,41 @@ class SpringSecurityUiService implements AclStrategy, ErrorsStrategy, Persistent
 
 		UserRole.removeAll user
 		addRoles user, roleNames
+		def secDomain
+		try {
+			secDomain = SecQuestions.findWhere((classMappings[UserRole].user): user)
+			if(!secDomain) {
+				secDomain = SecQuestions.getConstructor().newInstance()
+			}
+		} catch (Exception e) {
+			//no domain class and this is ok!
+		}
+		if(secDomain && secDomain instanceof Object) {
+			secDomain.properties = properties
+			save [:], secDomain, 'updateUser', transactionStatus
+			if(secDomain.hasErrors()) {
+				def eMap = [secQuestions:[:]]
+				secDomain.errors.allErrors.each {org.springframework.validation.ObjectError err->
+					eMap.secQuestions[(err.properties['field'])] =  [code: err.getCode(), arg: err.getArguments(), dm : err.getDefaultMessage()]
+				}
+				user.metaClass['tabErrors'] = eMap
+			}
+		}
 		removeUserFromCache user
 	}
 
 	@Transactional
 	void deleteUser(user) {
 		UserRole.removeAll user
+		def secdomain
+		try {
+			secdomain = SecQuestions.findWhere((classMappings[UserRole].user): user)
+		} catch (Exception e) {
+			//no domain class and this is ok!
+		}
+		if(secdomain && secdomain instanceof Object) {
+			delete secdomain, 'deleteUser', transactionStatus
+		}
 		delete user, 'deleteUser', transactionStatus
 		removeUserFromCache user
 	}
@@ -445,6 +528,8 @@ class SpringSecurityUiService implements AclStrategy, ErrorsStrategy, Persistent
 			url:             requestMap.urlField ?: '',
 			configAttribute: requestMap.configAttributeField ?: '',
 			httpMethod:      requestMap.httpMethodField ?: ''].asImmutable()
+		mappings[UserRole] = [ user: conf.ui.forgotPassword.validationUserLookUpProperty ?: 'user' ].asImmutable()
+		mappings[SecQuestions] = [ 'securityQuestionsDomain' : conf.ui.forgotPassword.validationUserLookUpProperty ].asImmutable()
 
 		mappings
 	}
@@ -743,6 +828,7 @@ class SpringSecurityUiService implements AclStrategy, ErrorsStrategy, Persistent
 	protected Class<?> Role
 	protected Class<?> User
 	protected Class<?> UserRole
+	protected Class<?> SecQuestions
 
 	protected Map<String, Class<?>> domainClassesByControllerName = [:]
 
@@ -769,6 +855,7 @@ class SpringSecurityUiService implements AclStrategy, ErrorsStrategy, Persistent
 		Role = getDomainClassClass(conf.authority.className)
 		User = getDomainClassClass(conf.userLookup.userDomainClassName)
 		UserRole = getDomainClassClass(conf.userLookup.authorityJoinClassName)
+		SecQuestions = getDomainClassClass(conf.ui.forgotPassword.forgotPasswordExtraValidationDomainClassName.toString().trim())
 
 		domainClassesByControllerName = [requestmap: Requestmap, role: Role, user: User]
 

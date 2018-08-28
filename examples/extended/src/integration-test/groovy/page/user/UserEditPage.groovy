@@ -3,6 +3,7 @@ package page.user
 import geb.module.Checkbox
 import geb.module.TextInput
 import page.EditPage
+import module.ProfileTab
 
 class UserEditPage extends EditPage {
 
@@ -16,5 +17,6 @@ class UserEditPage extends EditPage {
 		accountExpired { $(name: 'accountExpired').module(Checkbox) }
 		accountLocked { $(name: 'accountLocked').module(Checkbox) }
 		passwordExpired { $(name: 'passwordExpired').module(Checkbox) }
+		profileTab { module ProfileTab}
 	}
 }

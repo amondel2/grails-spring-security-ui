@@ -24,4 +24,6 @@ interface UserStrategy {
 	void updateUser(Map properties, user, List<String> roleNames)
 
 	void deleteUser(user)
+
+	def getSecurityQuestionsForUser(user,Map params)
 }

@@ -50,7 +50,7 @@ abstract class AbstractS2UiDomainController extends AbstractS2UiController {
 
 	protected doSave(instance, Closure afterSave = null) {
 
-		if (instance.hasErrors()) {
+		if (instance.hasErrors() || instance.hasProperty('tabErrors')) {
 			renderCreate model(instance, 'save')
 			return
 		}
@@ -96,7 +96,7 @@ abstract class AbstractS2UiDomainController extends AbstractS2UiController {
 
 		update instance
 
-		if (instance.hasErrors()) {
+		if (instance.hasErrors() || instance.hasProperty('tabErrors')) {
 			renderEdit model(instance, 'update')
 		}
 		else {

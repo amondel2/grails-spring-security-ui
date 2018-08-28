@@ -6,13 +6,14 @@ import grails.testing.services.ServiceUnitTest
 import spock.lang.Specification
 import spock.lang.Unroll
 
-@Unroll
+
 class SpringSecurityUiServiceSpec extends Specification implements ServiceUnitTest<SpringSecurityUiService> {
 
     void cleanup() {
         SpringSecurityUtils.resetSecurityConfig()
     }
 
+    @Unroll
     void "forgot password email subject is loaded from config if config exists"() {
         given: "the subject text exists in messages.properties"
         addForgotPasswordEmailSubjectToMessageSource()
@@ -40,6 +41,11 @@ class SpringSecurityUiServiceSpec extends Specification implements ServiceUnitTe
         false     | 'Password Reset'
     }
 
+    void "getSecurityQuestionsForUser(user)"() {
+        given:
+        SpringSecurityUtils.securityConfig.ui.forgotPassword
+    }
+
     private void updateFromConfig() {
         service.messageSource = messageSource
         service.initialize()
@@ -48,4 +54,6 @@ class SpringSecurityUiServiceSpec extends Specification implements ServiceUnitTe
     protected void addForgotPasswordEmailSubjectToMessageSource() {
         messageSource.addMessage 'spring.security.ui.forgotPassword.email.subject', Locale.US, 'Password Reset'
     }
+
+
 }
