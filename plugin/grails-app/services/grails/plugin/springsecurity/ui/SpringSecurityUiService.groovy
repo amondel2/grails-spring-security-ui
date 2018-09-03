@@ -36,6 +36,7 @@ import org.springframework.security.authentication.dao.SaltSource
 import org.springframework.security.core.userdetails.UserCache
 import org.springframework.transaction.TransactionStatus
 import org.springframework.util.ClassUtils
+import grails.plugin.springsecurity.ui.UserTabTypes
 
 import java.text.SimpleDateFormat
 
@@ -411,11 +412,8 @@ class SpringSecurityUiService implements AclStrategy, ErrorsStrategy, Persistent
 				save [:], secDomain, 'saveUser', transactionStatus
 
 				if(secDomain.hasErrors()) {
-					def eMap = [secQuestions:[:]]
-					secDomain.errors.allErrors.each {org.springframework.validation.ObjectError err->
-						eMap.secQuestions[(err.properties['field'])] =  [code: err.getCode(), arg: err.getArguments(), dm : err.getDefaultMessage()]
-					}
-					user.metaClass['tabErrors'] = eMap
+					createTabErrors(secDomain,user,UserTabTypes.secQuestions)
+
 				}
 
 			}
@@ -451,14 +449,18 @@ class SpringSecurityUiService implements AclStrategy, ErrorsStrategy, Persistent
 			secDomain.properties = properties
 			save [:], secDomain, 'updateUser', transactionStatus
 			if(secDomain.hasErrors()) {
-				def eMap = [secQuestions:[:]]
-				secDomain.errors.allErrors.each {org.springframework.validation.ObjectError err->
-					eMap.secQuestions[(err.properties['field'])] =  [code: err.getCode(), arg: err.getArguments(), dm : err.getDefaultMessage()]
-				}
-				user.metaClass['tabErrors'] = eMap
+				createTabErrors(secDomain,user,UserTabTypes.secQuestions)
 			}
 		}
 		removeUserFromCache user
+	}
+
+	private void createTabErrors(errorDomain,mainDomain,mapName) {
+		def eMap = [(mapName):[:]]
+		errorDomain.errors.allErrors.each {org.springframework.validation.ObjectError err->
+			eMap[(mapName)][(err.properties['field'])] =  [code: err.getCode(), arg: err.getArguments(), dm : err.getDefaultMessage()]
+		}
+		mainDomain.metaClass['tabErrors'] = eMap
 	}
 
 	@Transactional

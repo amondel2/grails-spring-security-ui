@@ -51,6 +51,7 @@ abstract class AbstractS2UiDomainController extends AbstractS2UiController {
 	protected doSave(instance, Closure afterSave = null) {
 
 		if (instance.hasErrors() || instance.hasProperty('tabErrors')) {
+			flash.error = message(code: 'spring.security.ui.invalid.save.form.error')
 			renderCreate model(instance, 'save')
 			return
 		}
@@ -97,6 +98,7 @@ abstract class AbstractS2UiDomainController extends AbstractS2UiController {
 		update instance
 
 		if (instance.hasErrors() || instance.hasProperty('tabErrors')) {
+			flash.error = message(code: 'spring.security.ui.invalid.update.form.error')
 			renderEdit model(instance, 'update')
 		}
 		else {

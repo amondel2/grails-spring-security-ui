@@ -1,3 +1,4 @@
+<%@ page import="grails.plugin.springsecurity.ui.UserTabTypes" %>
 <html>
 <head>
 	<meta name="layout" content="${layoutUi}"/>
@@ -33,7 +34,7 @@
 				<table>
 					<tbody>
 					<g:each var='entry' in='${secQuestions}'>
-						<g:set var="errorstxt"><g:if test="${tabErrors['secQuestions'] && tabErrors['secQuestions'][(entry.key)]}">${tabErrors['secQuestions'][(entry.key)]}</g:if></g:set>
+						<g:set var="errorstxt"><g:if test="${tabErrors[UserTabTypes.secQuestions] && tabErrors[UserTabTypes.secQuestions][(entry.key)]}">${tabErrors[UserTabTypes.secQuestions][(entry.key)]}</g:if></g:set>
 						<s2ui:textFieldRow  name='${entry.key}' errorMsg="${errorstxt}" labelCodeDefault='${entry.key}' useBean="false" value="${entry.value}"/>
 					</g:each>
 					</tbody>

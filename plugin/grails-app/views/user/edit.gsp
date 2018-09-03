@@ -1,3 +1,4 @@
+<%@ page import="grails.plugin.springsecurity.ui.UserTabTypes" %>
 <sec:ifNotSwitched>
 	<sec:ifAllGranted roles='${securityConfig.ui.switchUserRoleName}'>
 	<g:set var='username' value='${uiPropertiesStrategy.getProperty(user, 'username')}'/>
@@ -39,7 +40,8 @@
 				<table>
 					<tbody>
 					<g:each var='entry' in='${secQuestions}'>
-						<s2ui:textFieldRow name='${entry.key}' labelCodeDefault='${entry.key}' useBean="false" value="${entry.value}"/>
+						<g:set var="errorstxt"><g:if test="${tabErrors[UserTabTypes.secQuestions] && tabErrors[UserTabTypes.secQuestions][(entry.key)]}">${tabErrors[UserTabTypes.secQuestions][(entry.key)]}</g:if></g:set>
+						<s2ui:textFieldRow errorMsg="${errorstxt}" name='${entry.key}' labelCodeDefault='${entry.key}' useBean="false" value="${entry.value}"/>
 					</g:each>
 					</tbody>
 				</table>
