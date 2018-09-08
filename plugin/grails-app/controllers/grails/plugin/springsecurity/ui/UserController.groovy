@@ -101,11 +101,10 @@ class UserController extends AbstractS2UiDomainController {
 		tabError.collect {key, val ->
 			rtn[key] = [:]
 			val?.each{ k, v ->
-				rtn[key][k] = message(code: v.code,args: v.arg,default:v.dm)
+				rtn[key][k] = message(error: v.error)
 			}
 		}
 		rtn
-
 	}
 
 	@CompileStatic

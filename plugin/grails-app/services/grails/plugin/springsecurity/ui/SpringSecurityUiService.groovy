@@ -458,7 +458,7 @@ class SpringSecurityUiService implements AclStrategy, ErrorsStrategy, Persistent
 	private void createTabErrors(errorDomain,mainDomain,mapName) {
 		def eMap = [(mapName):[:]]
 		errorDomain.errors.allErrors.each {org.springframework.validation.ObjectError err->
-			eMap[(mapName)][(err.properties['field'])] =  [code: err.getCode(), arg: err.getArguments(), dm : err.getDefaultMessage()]
+			eMap[(mapName)][(err.properties['field'])] =  [error: err]
 		}
 		mainDomain.metaClass['tabErrors'] = eMap
 	}
