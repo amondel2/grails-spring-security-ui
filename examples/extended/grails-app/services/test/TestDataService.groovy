@@ -82,7 +82,7 @@ class TestDataService {
 		(1..3).each {
 			def user = save new User("user$it", "password", "user$it@test.com")
 			grantRole user, 'user'
-			save new Profile(user:user,myAnswer1:'1234',myQuestion1: "Count to four",myAnswer2: '12345', myQuestion2: 'Count to Five')
+			new Profile(user:user,myAnswer1:'1234',myQuestion1: "Count to four",myAnswer2: '12345', myQuestion2: 'Count to Five').save(failOnError: true,flush:true)
 		}
 
 		User admin = save new User('admin', 'password', 'admin@test.com')

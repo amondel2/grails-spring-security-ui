@@ -2,6 +2,7 @@ package page.user
 
 import geb.module.Checkbox
 import geb.module.TextInput
+import module.ProfileTab
 import page.CreatePage
 
 class UserCreatePage extends CreatePage {
@@ -16,5 +17,6 @@ class UserCreatePage extends CreatePage {
 		accountExpired { $(name: 'accountExpired').module(Checkbox) }
 		accountLocked { $(name: 'accountLocked').module(Checkbox) }
 		passwordExpired { $(name: 'passwordExpired').module(Checkbox) }
+		profileTab { module ProfileTab}
 	}
 }

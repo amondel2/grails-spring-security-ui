@@ -67,35 +67,39 @@ class UserSpec extends AbstractSecuritySpec {
 		 at UserEditPage
 
 		when:
+		submit()
+
+		then:
+		at UserEditPage
+
+		when:
 			profileTab.select()
 
 		then:
 			assert  $("#myQuestion1").value() ==  "Count to four"
 
-		given:
-			def a1 =  $("#myAnswer1").value()
-			def a2 =  $("#myAnswer2").value()
-
 		when:
+		def a1 =  $("#myAnswer1").value()
+		def a2 =  $("#myAnswer2").value()
 		$("#myQuestion1").value("Count to 1234")
 		$("#myQuestion2").value("Count to six")
 		$("#myAnswer2").value("123456")
 		submit()
 
 		then:
-			at UserEditPage
-			assertHtmlContains("updated")
+		at UserEditPage
+		assertHtmlContains("updated")
 
 		when:
 		profileTab.select()
 
 		then:
-		assert  $("#myQuestion1").value() ==  "Count to 1234"
-		assert  $("#myQuestion2").value() ==  "Count to six"
-		assert  $("#myAnswer2").value() !=  a2
-		assert  $("#myAnswer2").value() !=  "123456"
-		assert  $("#myAnswer1").value() ==   a1
-
+		$("#myAnswer1").value() ==  a1
+		$("#myQuestion1").value() ==  "Count to 1234"
+		$("#myQuestion2").value() ==  "Count to six"
+		$("#myAnswer2").value() !=  "123456"
+		$("#myAnswer1").value() !=   "1234"
+		$("#myAnswer1").value() !=   a2
 
 	}
 
@@ -182,6 +186,9 @@ class UserSpec extends AbstractSecuritySpec {
 		username = newUsername
 		$('#password') << 'password'
 		enabled.check()
+		profileTab.select()
+		$("#myAnswer2").value("123456")
+		$("#myAnswer1").value("1234")
 		submit()
 
 		then:
