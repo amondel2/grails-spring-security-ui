@@ -66,6 +66,24 @@ class UserSpec extends AbstractSecuritySpec {
 		then:
 		 at UserEditPage
 
+		when: "select Roles tab"
+		rolesTab.select()
+
+		then: "12 roles are listed and 4 is enabled"
+		assert rolesTab.totalRoles() == 12
+		assert rolesTab.totalEnabledRoles() == 4
+		assert rolesTab.hasEnabledRole('ROLE_USER')
+
+		when: "ROLE_ADMIN is enabled and the changes are saved"
+		rolesTab.enableRole "ROLE_ADMIN"
+		submit()
+		rolesTab.select()
+
+		then: "12 roles are listed and 2 are enabled"
+		assert rolesTab.totalEnabledRoles() == 2
+		assert rolesTab.hasEnabledRoles(['ROLE_USER', 'ROLE_ADMIN'])
+		assert rolesTab.totalRoles() == 12
+
 		when:
 		submit()
 
@@ -83,6 +101,30 @@ class UserSpec extends AbstractSecuritySpec {
 		def a2 =  $("#myAnswer2").value()
 		$("#myQuestion1").value("Count to 1234")
 		$("#myQuestion2").value("Count to six")
+		$("#myAnswer2").value("")
+		submit()
+
+		then:
+		at UserEditPage
+		assertHtmlContains("There are errors")
+		profileTab.select() == null
+		assertHtmlContains("Property [myAnswer2]")
+		$("#myAnswer1").value() ==  a1
+
+		when:
+
+		$("#myAnswer1").value("")
+		submit()
+
+		then:
+		at UserEditPage
+		assertHtmlContains("There are errors")
+		profileTab.select() == null
+		assertHtmlContains("Property [myAnswer2]")
+		assertHtmlContains("Property [myAnswer1]")
+
+		when:
+		$("#myAnswer1").value("1234")
 		$("#myAnswer2").value("123456")
 		submit()
 
@@ -94,7 +136,7 @@ class UserSpec extends AbstractSecuritySpec {
 		profileTab.select()
 
 		then:
-		$("#myAnswer1").value() ==  a1
+		$("#myAnswer1").value() !=  a1
 		$("#myQuestion1").value() ==  "Count to 1234"
 		$("#myQuestion2").value() ==  "Count to six"
 		$("#myAnswer2").value() !=  "123456"
@@ -187,7 +229,35 @@ class UserSpec extends AbstractSecuritySpec {
 		$('#password') << 'password'
 		enabled.check()
 		profileTab.select()
+		$("#myAnswer1").value("1234")
+		submit()
+
+		then:
+		at UserCreatePage
+		username == newUsername
+		enabled.checked
+		!accountExpired.checked
+		!accountLocked.checked
+		!passwordExpired.checked
+		profileTab.select() == null
+		assertContentContains 'Property [myAnswer2]'
+
+		when:
 		$("#myAnswer2").value("123456")
+		$("#myAnswer1").value("")
+		submit()
+
+		then:
+		at UserCreatePage
+		username == newUsername
+		enabled.checked
+		!accountExpired.checked
+		!accountLocked.checked
+		!passwordExpired.checked
+		profileTab.select() == null
+		assertContentContains 'Property [myAnswer1]'
+
+		when:
 		$("#myAnswer1").value("1234")
 		submit()
 
@@ -216,6 +286,23 @@ class UserSpec extends AbstractSecuritySpec {
 		accountExpired.checked
 		accountLocked.checked
 		passwordExpired.checked
+
+		when:
+		to UserSearchPage
+
+		username = updatedName
+		submit()
+
+		then:
+		at UserSearchPage
+		assertResults 1,1,1
+
+
+		when:
+		$("a", text: updatedName).click()
+
+		then:
+		at UserEditPage
 
 		// delete
 		when:
